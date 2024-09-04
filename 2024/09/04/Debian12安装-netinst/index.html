@@ -1,0 +1,266 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Debian12安装(netinst) | 挽歌</title><meta name="author" content="挽歌"><meta name="copyright" content="挽歌"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="选择Install 选择语言选择英语（English）、地区选择Hong Kong、键盘映射（keymap）选择Americal 的  给电脑主机命名Debian 或者其他自己喜欢的名字  给配置域名可以直接跳过  配置管理员（ROOT）密码 再次确认管理员密码  设置普通用户和密码第一个提示输入普通用户的真实名字  用户的账号设置，两个可以设置一样  设置密码，之后还会再次确认输入一次密码  之">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Debian12安装(netinst)">
+<meta property="og:url" content="https://143wange.top/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/index.html">
+<meta property="og:site_name" content="挽歌">
+<meta property="og:description" content="选择Install 选择语言选择英语（English）、地区选择Hong Kong、键盘映射（keymap）选择Americal 的  给电脑主机命名Debian 或者其他自己喜欢的名字  给配置域名可以直接跳过  配置管理员（ROOT）密码 再次确认管理员密码  设置普通用户和密码第一个提示输入普通用户的真实名字  用户的账号设置，两个可以设置一样  设置密码，之后还会再次确认输入一次密码  之">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://143wange.top/img/Debian/Debian.png">
+<meta property="article:published_time" content="2024-09-04T15:03:56.000Z">
+<meta property="article:modified_time" content="2024-09-04T15:16:08.258Z">
+<meta property="article:author" content="挽歌">
+<meta property="article:tag" content="Debian">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://143wange.top/img/Debian/Debian.png"><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="https://143wange.top/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Debian12安装(netinst)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-09-04 23:16:08'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/./img/Debian/Debian.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">挽歌</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Debian12安装(netinst)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-09-04T15:03:56.000Z" title="发表于 2024-09-04 23:03:56">2024-09-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-09-04T15:16:08.258Z" title="更新于 2024-09-04 23:16:08">2024-09-04</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Debian12安装(netinst)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h3 id="选择Install"><a href="#选择Install" class="headerlink" title="选择Install"></a>选择Install</h3><p><img src="/./img/Debian/installSystem/image-20240904214749228.png" alt="image-20240904214749228"></p>
+<h3 id="选择语言"><a href="#选择语言" class="headerlink" title="选择语言"></a>选择语言</h3><p>选择英语（English）、地区选择Hong Kong、键盘映射（keymap）选择Americal 的</p>
+<p><img src="/./img/Debian/installSystem/image-20240904214852277.png" alt="image-20240904214852277"></p>
+<h3 id="给电脑主机命名"><a href="#给电脑主机命名" class="headerlink" title="给电脑主机命名"></a>给电脑主机命名</h3><p>Debian 或者其他自己喜欢的名字</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215130598.png" alt="image-20240904215130598"></p>
+<p>给配置域名可以直接跳过</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215222809.png" alt="image-20240904215222809"></p>
+<h3 id="配置管理员（ROOT）密码"><a href="#配置管理员（ROOT）密码" class="headerlink" title="配置管理员（ROOT）密码"></a>配置管理员（ROOT）密码</h3><p><img src="/./img/Debian/installSystem/image-20240904215330381.png" alt="image-20240904215330381"></p>
+<p>再次确认管理员密码</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215357007.png" alt="image-20240904215357007"></p>
+<h3 id="设置普通用户和密码"><a href="#设置普通用户和密码" class="headerlink" title="设置普通用户和密码"></a>设置普通用户和密码</h3><p>第一个提示输入普通用户的真实名字</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215428824.png" alt="image-20240904215428824"></p>
+<p>用户的账号设置，两个可以设置一样</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215500173.png" alt="image-20240904215500173"></p>
+<p>设置密码，之后还会再次确认输入一次密码</p>
+<p><img src="/./img/Debian/installSystem/image-20240904215743527.png" alt="image-20240904215743527"></p>
+<p>之后等待片刻</p>
+<h3 id="磁盘分区"><a href="#磁盘分区" class="headerlink" title="磁盘分区"></a>磁盘分区</h3><p>新手可以选择第一个磁盘分区模式，可以选择第一个，但我还是建议第二个</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>英文</th>
+<th>中文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Guided-use entire disk</td>
+<td>带引导模式方式直接使用整块磁盘(推荐新手)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Guided-use entire disk and set up LVM</td>
+<td>带引导模式方式使用整块磁盘并使用LVM，LVM(Logical Volume Mananger)逻辑卷管理，可对磁盘进行弹性管理</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Guided-use entire disk and set up encrypted LVM</td>
+<td>带引导模式方式使用整块磁盘并使用加密的LVM</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Manual</td>
+<td>完全手动模式</td>
+</tr>
+</tbody></table>
+<p><img src="/./img/Debian/installSystem/image-20240904215845120.png" alt="image-20240904215845120"></p>
+<p>选择第二个后，选择磁盘</p>
+<p><img src="/./img/Debian/installSystem/image-20240904220451643.png" alt="image-20240904220451643"></p>
+<h3 id="选择分区方案"><a href="#选择分区方案" class="headerlink" title="选择分区方案"></a>选择分区方案</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>英文</th>
+<th>中文</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>All files in one partition(recommended for new users)</td>
+<td>所有的文件都位于一个分区中(推荐新用户)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Separate &#x2F;home partition</td>
+<td>单独设置home分区(重装系统是home分区可以保留)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Separate &#x2F;home,&#x2F;var,and &#x2F;tmp partitions</td>
+<td>单独设置home分区，var分区以及tmp分区</td>
+</tr>
+</tbody></table>
+<p>我选择第一个，懒得折腾了</p>
+<p><img src="/./img/Debian/installSystem/image-20240904220522520.png" alt="image-20240904220522520"></p>
+<p>分区提醒被改变并设置LVM，选择yes</p>
+<p><img src="/./img/Debian/installSystem/image-20240904220825684.png" alt="image-20240904220825684"></p>
+<p>默认为整个分区的大小，没有问题的选择continue</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221013567.png" alt="image-20240904221013567"></p>
+<p>提示接下会格式化磁盘，yes。之后开始安装系统等待片刻。</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221044393.png" alt="image-20240904221044393"></p>
+<h3 id="提示是否扫描安装介质，选择：no"><a href="#提示是否扫描安装介质，选择：no" class="headerlink" title="提示是否扫描安装介质，选择：no"></a>提示是否扫描安装介质，选择：no</h3><p>意思是扫描安装系统的u盘什么的</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221353374.png" alt="image-20240904221353374"></p>
+<h3 id="选择镜像源"><a href="#选择镜像源" class="headerlink" title="选择镜像源"></a>选择镜像源</h3><p>找到China并选择</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221646445.png" alt="image-20240904221646445"></p>
+<p>可以选择第四个中国科技大学的镜像源<code>mirror.ustc.edu.cn</code></p>
+<p>回车确认</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221837198.png" alt="image-20240904221837198"></p>
+<h3 id="选择代理"><a href="#选择代理" class="headerlink" title="选择代理"></a>选择代理</h3><p>这个是填入一个http代理，不需要的可以跳过，我这里直接下一步</p>
+<p><img src="/./img/Debian/installSystem/image-20240904221952046.png" alt="image-20240904221952046"></p>
+<p>之后稍等片刻</p>
+<p>选择NO</p>
+<p><img src="/./img/Debian/installSystem/image-20240904222509129.png" alt="image-20240904222509129"></p>
+<h3 id="安装基本系统。"><a href="#安装基本系统。" class="headerlink" title="安装基本系统。"></a>安装基本系统。</h3><p>在<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=%E5%AE%89%E8%A3%85%E7%A8%8B%E5%BA%8F&spm=1001.2101.3001.7020">安装程序</a>提示你安装软件包时，可以选择 “Standard system utilities” 以安装基本系统。稍等片刻，直到软件包安装完成。</p>
+<p>最小化安装仅选择基础系统与SSH即可,即最后两个，如果需要桌面服务的话可以勾选第一个和KDE Plasma</p>
+<p><img src="/./img/Debian/installSystem/image-20240904222724257.png" alt="image-20240904222724257"></p>
+<p>tab: 移动、空格：选择、回车：确认</p>
+<p>接下来就是慢慢等待安装吧</p>
+<p><img src="/./img/Debian/installSystem/image-20240904223506041.png" alt="image-20240904223506041"></p>
+<h3 id="安装GRUB引导程序，yes"><a href="#安装GRUB引导程序，yes" class="headerlink" title="安装GRUB引导程序，yes"></a>安装GRUB引导程序，yes</h3><p><img src="/./img/Debian/installSystem/image-20240904224017698.png" alt="image-20240904224017698"></p>
+<p>选择第二个</p>
+<p><img src="/./img/Debian/installSystem/image-20240904224106329.png" alt="image-20240904224106329"></p>
+<p>系统安装完成，回车后重启</p>
+<p><img src="/./img/Debian/installSystem/image-20240904224421264.png" alt="image-20240904224421264"></p>
+<p>运行ssh使用root登陆</p>
+<h4 id="安装vim"><a href="#安装vim" class="headerlink" title="安装vim"></a>安装vim</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">su -</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">获取root权限，输入root密码</span></span><br><span class="line">apt install vim -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="打开sshd配置文件"><a href="#打开sshd配置文件" class="headerlink" title="打开sshd配置文件"></a>打开sshd配置文件</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
+
+<p>按esc，进入命令行模式。输入命令查询PermitRootLogin</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/ PermitRootLogin</span><br></pre></td></tr></table></figure>
+
+<p>删除该行前面的#解开注释，在后面追加yes，用空格隔开</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PermitRootLogin yes</span><br></pre></td></tr></table></figure>
+
+<p>还原的话就是将该行添加注释即可</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PermitRootLogin prohibit-password</span><br></pre></td></tr></table></figure>
+
+<h4 id="修改完成后输入命令重启ssh"><a href="#修改完成后输入命令重启ssh" class="headerlink" title="修改完成后输入命令重启ssh"></a>修改完成后输入命令重启ssh</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/ssh restart</span><br></pre></td></tr></table></figure>
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://143wange.top">挽歌</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://143wange.top/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/">https://143wange.top/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://143wange.top" target="_blank">挽歌</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Debian/">Debian</a></div><div class="post_share"><div class="social-share" data-image="/./img/Debian/Debian.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/07/16/termux%E5%AE%89%E8%A3%85%E6%95%B0%E6%8D%AE%E5%BA%93mariadb/"><img class="next-cover" src="/./img/fire.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">termux安装数据库mariadb</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">挽歌</div><div class="author-info__description">挽歌滴博客，欢迎访问哇！希望在这个你可以学到有用的东西</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wgdragon"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/dirge143" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:2692174150@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9Install"><span class="toc-number">1.</span> <span class="toc-text">选择Install</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E8%AF%AD%E8%A8%80"><span class="toc-number">2.</span> <span class="toc-text">选择语言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%99%E7%94%B5%E8%84%91%E4%B8%BB%E6%9C%BA%E5%91%BD%E5%90%8D"><span class="toc-number">3.</span> <span class="toc-text">给电脑主机命名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86%E5%91%98%EF%BC%88ROOT%EF%BC%89%E5%AF%86%E7%A0%81"><span class="toc-number">4.</span> <span class="toc-text">配置管理员（ROOT）密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE%E6%99%AE%E9%80%9A%E7%94%A8%E6%88%B7%E5%92%8C%E5%AF%86%E7%A0%81"><span class="toc-number">5.</span> <span class="toc-text">设置普通用户和密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A3%81%E7%9B%98%E5%88%86%E5%8C%BA"><span class="toc-number">6.</span> <span class="toc-text">磁盘分区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E5%88%86%E5%8C%BA%E6%96%B9%E6%A1%88"><span class="toc-number">7.</span> <span class="toc-text">选择分区方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E6%98%AF%E5%90%A6%E6%89%AB%E6%8F%8F%E5%AE%89%E8%A3%85%E4%BB%8B%E8%B4%A8%EF%BC%8C%E9%80%89%E6%8B%A9%EF%BC%9Ano"><span class="toc-number">8.</span> <span class="toc-text">提示是否扫描安装介质，选择：no</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E9%95%9C%E5%83%8F%E6%BA%90"><span class="toc-number">9.</span> <span class="toc-text">选择镜像源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E4%BB%A3%E7%90%86"><span class="toc-number">10.</span> <span class="toc-text">选择代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E5%9F%BA%E6%9C%AC%E7%B3%BB%E7%BB%9F%E3%80%82"><span class="toc-number">11.</span> <span class="toc-text">安装基本系统。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85GRUB%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%8Cyes"><span class="toc-number">12.</span> <span class="toc-text">安装GRUB引导程序，yes</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E8%A3%85vim"><span class="toc-number">12.1.</span> <span class="toc-text">安装vim</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%93%E5%BC%80sshd%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-number">12.2.</span> <span class="toc-text">打开sshd配置文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9%E5%AE%8C%E6%88%90%E5%90%8E%E8%BE%93%E5%85%A5%E5%91%BD%E4%BB%A4%E9%87%8D%E5%90%AFssh"><span class="toc-number">12.3.</span> <span class="toc-text">修改完成后输入命令重启ssh</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/" title="Debian12安装(netinst)"><img src="/./img/Debian/Debian.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Debian12安装(netinst)"/></a><div class="content"><a class="title" href="/2024/09/04/Debian12%E5%AE%89%E8%A3%85-netinst/" title="Debian12安装(netinst)">Debian12安装(netinst)</a><time datetime="2024-09-04T15:03:56.000Z" title="发表于 2024-09-04 23:03:56">2024-09-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/termux%E5%AE%89%E8%A3%85%E6%95%B0%E6%8D%AE%E5%BA%93mariadb/" title="termux安装数据库mariadb"><img src="/./img/fire.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="termux安装数据库mariadb"/></a><div class="content"><a class="title" href="/2024/07/16/termux%E5%AE%89%E8%A3%85%E6%95%B0%E6%8D%AE%E5%BA%93mariadb/" title="termux安装数据库mariadb">termux安装数据库mariadb</a><time datetime="2024-07-16T10:37:29.000Z" title="发表于 2024-07-16 18:37:29">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/Win%E6%A1%8C%E9%9D%A2%E5%9B%BE%E6%A0%87%E7%99%BD%E8%89%B2%E6%81%A2%E5%A4%8D/" title="Win桌面图标白色恢复"><img src="/./img/mao.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Win桌面图标白色恢复"/></a><div class="content"><a class="title" href="/2024/07/16/Win%E6%A1%8C%E9%9D%A2%E5%9B%BE%E6%A0%87%E7%99%BD%E8%89%B2%E6%81%A2%E5%A4%8D/" title="Win桌面图标白色恢复">Win桌面图标白色恢复</a><time datetime="2024-07-16T03:08:02.000Z" title="发表于 2024-07-16 11:08:02">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/15/termux%E8%BF%90%E8%A1%8Cgogs/" title="termux运行gogs"><img src="/./img/jijiashaonv.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="termux运行gogs"/></a><div class="content"><a class="title" href="/2024/07/15/termux%E8%BF%90%E8%A1%8Cgogs/" title="termux运行gogs">termux运行gogs</a><time datetime="2024-07-15T12:44:00.000Z" title="发表于 2024-07-15 20:44:00">2024-07-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/15/Maven%E5%88%9B%E5%BB%BASpringBoot/" title="Maven创建SpringBoot"><img src="/./img/cat.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Maven创建SpringBoot"/></a><div class="content"><a class="title" href="/2024/07/15/Maven%E5%88%9B%E5%BB%BASpringBoot/" title="Maven创建SpringBoot">Maven创建SpringBoot</a><time datetime="2024-07-15T08:02:01.000Z" title="发表于 2024-07-15 16:02:01">2024-07-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By 挽歌</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><img src="https://haiyong.site/img/icp.png"><a href="https://beian.miit.gov.cn/#/Integrated/index"  style="color:white" target="_blank">桂ICP备2023009870号</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://beian.mps.gov.cn/#/query/webSearch?code=45050002000132"  style="color:white" target="_blank">桂公网安备45050002000132号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
