@@ -31,11 +31,11 @@ https://143wange.top/2023/01/06/hello-world/
 https://143wange.top/
 https://143wange.top/tags/Debian/
 https://143wange.top/tags/MySQL/
-https://143wange.top/tags/IDEA/
 https://143wange.top/tags/Java/
+https://143wange.top/tags/IDEA/
 https://143wange.top/tags/linux/
-https://143wange.top/tags/Maven/
 https://143wange.top/tags/Navicat/
+https://143wange.top/tags/Maven/
 https://143wange.top/tags/Win/
 https://143wange.top/tags/vue/
 https://143wange.top/tags/termux/
