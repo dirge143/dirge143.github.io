@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://143wange.top/2026/07/29/uniapp%20SurfaceView%E5%B1%82%E7%BA%A7%E5%8F%A0%E5%8A%A0/</loc>
+    
+    <lastmod>2026-07-29</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://143wange.top/2026/05/01/claude-code-%E6%8E%A5%E5%85%A5deeepseek/</loc>
     
     <lastmod>2026-05-01</lastmod>
@@ -283,7 +292,7 @@
 
   <url>
     <loc>https://143wange.top/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -291,70 +300,77 @@
   
   <url>
     <loc>https://143wange.top/tags/Debian/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/MySQL/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/IDEA/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/Java/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/linux/</loc>
-    <lastmod>2026-06-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://143wange.top/tags/Maven/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/Navicat/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://143wange.top/tags/vue/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <loc>https://143wange.top/tags/Maven/</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/Win/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://143wange.top/tags/vue/</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://143wange.top/tags/termux/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://143wange.top/tags/uniapp/</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
