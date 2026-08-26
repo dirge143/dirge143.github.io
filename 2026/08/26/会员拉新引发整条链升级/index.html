@@ -1,0 +1,439 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1) | 曦辰Celestiawn</title><meta name="author" content="曦辰"><meta name="copyright" content="曦辰"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="摘要：做分销 &#x2F; 会员体系的朋友都懂这个噩梦——最底下的会员拉了一个新人，结果整条父辈链上每个人都可能触发升级；而每次升级判定都要把整个团队重新扫一遍，人一多直接卡死。本文分享一套经过实战验证的解法：增量缓存 + 账本字段化 + 批量 SQL + 异步双路径，把单次判定压到 O(1)，把连锁升级的更新成本压到 O(树深度)，并附完整 Java 实现与实测数据。    目录 业务场景与升">
+<meta property="og:type" content="article">
+<meta property="og:title" content="会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)">
+<meta property="og:url" content="https://143wange.top/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/index.html">
+<meta property="og:site_name" content="曦辰Celestiawn">
+<meta property="og:description" content="摘要：做分销 &#x2F; 会员体系的朋友都懂这个噩梦——最底下的会员拉了一个新人，结果整条父辈链上每个人都可能触发升级；而每次升级判定都要把整个团队重新扫一遍，人一多直接卡死。本文分享一套经过实战验证的解法：增量缓存 + 账本字段化 + 批量 SQL + 异步双路径，把单次判定压到 O(1)，把连锁升级的更新成本压到 O(树深度)，并附完整 Java 实现与实测数据。    目录 业务场景与升">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://143wange.top/img/post/member-upgrade.png">
+<meta property="article:published_time" content="2026-08-26T13:53:13.000Z">
+<meta property="article:modified_time" content="2026-08-26T13:58:28.072Z">
+<meta property="article:author" content="曦辰">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="会员体系">
+<meta property="article:tag" content="性能优化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://143wange.top/img/post/member-upgrade.png"><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="https://143wange.top/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-08-26 21:58:28'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">18</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/post/member-upgrade.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">曦辰Celestiawn</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-26T13:53:13.000Z" title="发表于 2026-08-26 21:53:13">2026-08-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-26T13:58:28.072Z" title="更新于 2026-08-26 21:58:28">2026-08-26</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p><strong>摘要</strong>：做分销 &#x2F; 会员体系的朋友都懂这个噩梦——最底下的会员拉了一个新人，结果整条父辈链上每个人都可能触发升级；而每次升级判定都要把整个团队重新扫一遍，人一多直接卡死。本文分享一套经过实战验证的解法：<strong>增量缓存 + 账本字段化 + 批量 SQL + 异步双路径</strong>，把单次判定压到 O(1)，把连锁升级的更新成本压到 O(树深度)，并附完整 Java 实现与实测数据。</p>
+</blockquote>
+<p><img src="/img/post/member-upgrade.png" alt="会员拉新引发整条链升级"></p>
+<hr>
+<h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><ol>
+<li><a href="#1-%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E4%B8%8E%E5%8D%87%E7%BA%A7%E8%A7%84%E5%88%99">业务场景与升级规则</a></li>
+<li><a href="#2-%E6%96%B9%E6%A1%88a%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AE%9E%E6%97%B6%E9%80%92%E5%BD%92%E4%BC%9A%E5%8D%A1%E6%AD%BB">方案A：为什么实时递归会卡死</a></li>
+<li><a href="#3-%E6%A0%B8%E5%BF%83%E6%B4%9E%E5%AF%9F%E5%A2%9E%E9%87%8F%E7%BC%93%E5%AD%98%E6%96%B9%E6%A1%88b">核心洞察：增量缓存（方案B）</a></li>
+<li><a href="#4-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%90%BD%E5%9C%B0%E8%B4%A6%E6%9C%AC%E5%AD%97%E6%AE%B5%E5%8C%96">数据库落地：账本字段化</a></li>
+<li><a href="#5-%E4%B8%80%E6%9D%A1-sql-%E6%89%B9%E9%87%8F%E6%9B%B4%E6%96%B0%E6%95%B4%E6%9D%A1%E7%A5%96%E5%85%88%E9%93%BE">一条 SQL 批量更新整条祖先链</a></li>
+<li><a href="#6-%E8%BF%9E%E9%94%81%E5%8D%87%E7%BA%A7%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%85%E9%A1%BB%E4%BB%8E%E4%B8%8B%E5%BE%80%E4%B8%8A">连锁升级：为什么必须从下往上</a></li>
+<li><a href="#7-%E5%A4%A7%E5%8E%82%E5%8F%8C%E8%B7%AF%E5%BE%84%E5%90%8C%E6%AD%A5%E4%BF%9D%E5%AE%9E%E6%97%B6%E5%BC%82%E6%AD%A5%E6%89%9B%E6%B4%AA%E5%B3%B0">大厂双路径：同步保实时，异步扛洪峰</a></li>
+<li><a href="#8-%E5%AE%9E%E6%B5%8B%E6%95%B0%E6%8D%AE%E5%AF%B9%E6%AF%94">实测数据对比</a></li>
+<li><a href="#9-%E6%80%BB%E7%BB%93%E4%B8%8E%E5%BF%83%E5%BE%97">总结与心得</a></li>
+</ol>
+<hr>
+<h2 id="1-业务场景与升级规则"><a href="#1-业务场景与升级规则" class="headerlink" title="1. 业务场景与升级规则"></a>1. 业务场景与升级规则</h2><p>假设你在做一个会员分销系统：会员分<strong>白银 → 黄金 → 铂金 → 钻石</strong>四级，升下一级需要<strong>同时满足 4 个条件</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>升级目标</th>
+<th>团队内上一级人数</th>
+<th>直推人数</th>
+<th>团队业绩</th>
+<th>有效线（多市场）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>黄金</td>
+<td>白银 ≥ 50</td>
+<td>≥ 10</td>
+<td>≥ 10 万</td>
+<td>≥ 2 条线各有白银</td>
+</tr>
+<tr>
+<td>铂金</td>
+<td>黄金 ≥ 50</td>
+<td>≥ 15</td>
+<td>≥ 50 万</td>
+<td>≥ 3 条线各有黄金</td>
+</tr>
+<tr>
+<td>钻石</td>
+<td>铂金 ≥ 50</td>
+<td>≥ 20</td>
+<td>≥ 200 万</td>
+<td>≥ 4 条线各有铂金</td>
+</tr>
+</tbody></table>
+<p>几个容易踩坑的术语口径：</p>
+<ul>
+<li><strong>团队</strong> &#x3D; 全部下级（不限层级，含下级的下级），<strong>不含自己</strong></li>
+<li><strong>团队业绩</strong> &#x3D; 团队内所有会员消费额之和</li>
+<li><strong>有效线</strong> &#x3D; 从直接下级出发的每条分支里，至少出现 1 个上一级会员，算 1 条有效线</li>
+<li><strong>连升</strong> &#x3D; 条件一步到位时，可以一次跳多级（白银直接升钻石）</li>
+</ul>
+<p>看似简单，但这个体系有一个<strong>致命场景</strong>：</p>
+<blockquote>
+<p>最底层的会员拉了一个新会员 → 他的所有父辈的”团队人数 &#x2F; 业绩”都变了 → <strong>整条父辈链上每个人都可能触发升级</strong> → 而每次升级又会改变更高层的账本……连锁反应一路烧到创始人。</p>
+</blockquote>
+<p>规模一大，这个连锁反应就会把系统拖垮。</p>
+<hr>
+<h2 id="2-方案A：为什么实时递归会卡死"><a href="#2-方案A：为什么实时递归会卡死" class="headerlink" title="2. 方案A：为什么实时递归会卡死"></a>2. 方案A：为什么实时递归会卡死</h2><p>最直观的做法：每次判定时，把该会员的<strong>整棵下级树重新遍历一遍</strong>统计：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 方案A：暴力 DFS，每次判定扫整棵团队树</span></span><br><span class="line"><span class="type">int</span>[] dfsStat(Member node, <span class="type">int</span> level) &#123;</span><br><span class="line">    <span class="comment">// 统计 node 子树里各等级人数、业绩…</span></span><br><span class="line">    <span class="keyword">for</span> (Member child : childrenOf(node)) &#123;</span><br><span class="line">        dfsStat(child, level);   <span class="comment">// 递归整棵子树</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题在于<strong>判定和升级会互相放大</strong>：</p>
+<ul>
+<li>判定一个会员 &#x3D; 扫他的整个团队，复杂度 O(团队规模)</li>
+<li>全平台判一遍 &#x3D; O(N²)</li>
+<li>更糟的是<strong>升级连锁</strong>：底层升级 → 影响所有祖先 → 每个祖先又要各自全量重扫一遍团队</li>
+</ul>
+<p>实测 5 万会员时，单次”连锁升级结算”要处理 <strong>44,989 次节点</strong>——数据库早在几千人的时候就开始卡了。</p>
+<hr>
+<h2 id="3-核心洞察：增量缓存（方案B）"><a href="#3-核心洞察：增量缓存（方案B）" class="headerlink" title="3. 核心洞察：增量缓存（方案B）"></a>3. 核心洞察：增量缓存（方案B）</h2><p>先想清楚一个事实：**每个节点的数据变化，只影响”包含它的祖先”**。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">一个节点的账本只汇总&quot;自己的子树&quot;</span><br><span class="line">   ↓</span><br><span class="line">某节点变化，只影响&quot;包含它的祖先&quot;的账本</span><br><span class="line">   ↓</span><br><span class="line">这些祖先恰好是 parent 链上那一串（兄弟 / 后代 / 无关节点不受影响）</span><br><span class="line">   ↓</span><br><span class="line">所以更新成本 = O(树深度)，与团队规模无关</span><br></pre></td></tr></table></figure>
+
+<p>于是思路反转：<strong>不现算，改缓存</strong>。给每个会员维护一份”团队账本”——团队里各等级人数、团队业绩、子树里有没有某等级会员。数据变化时，<strong>只沿祖先链做加减法</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方案A（实时递归）</th>
+<th>方案B（增量缓存）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单会员判定</td>
+<td>O(团队规模) ≈ O(N)</td>
+<td><strong>O(1)</strong></td>
+</tr>
+<tr>
+<td>新会员加入传播</td>
+<td>O(N·深度)</td>
+<td><strong>O(深度)</strong></td>
+</tr>
+<tr>
+<td>单人升级传播</td>
+<td>O(N·深度)</td>
+<td><strong>O(深度)</strong></td>
+</tr>
+</tbody></table>
+<p>这就是方案B 的全部秘密：**判定 O(1)，更新 O(深度)**，没有更低的下限。</p>
+<hr>
+<h2 id="4-数据库落地：账本字段化"><a href="#4-数据库落地：账本字段化" class="headerlink" title="4. 数据库落地：账本字段化"></a>4. 数据库落地：账本字段化</h2><p>方案B 的数据库形态：一张 <code>member_team_stat</code> 账本表，一人一行，字段就是”缓存”：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `member_team_stat` (</span><br><span class="line">  `user_id`       <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span>                COMMENT <span class="string">&#x27;会员ID(主键)&#x27;</span>,</span><br><span class="line">  `parent_id`     <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;直接上级ID(有效线判断用)&#x27;</span>,</span><br><span class="line">  `direct_cnt`    <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;直推人数&#x27;</span>,</span><br><span class="line">  `silver_cnt`    <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;团队内白银数(不含自己)&#x27;</span>,</span><br><span class="line">  `gold_cnt`      <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;团队内黄金数(不含自己)&#x27;</span>,</span><br><span class="line">  `platinum_cnt`  <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;团队内铂金数(不含自己)&#x27;</span>,</span><br><span class="line">  `diamond_cnt`   <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;团队内钻石数(不含自己)&#x27;</span>,</span><br><span class="line">  `team_sales`    <span class="type">DECIMAL</span>(<span class="number">14</span>,<span class="number">2</span>)   <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;团队业绩(不含自己)&#x27;</span>,</span><br><span class="line">  `has_silver`    TINYINT         <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;子树(含自己)是否存在白银会员,有效线判断用&#x27;</span>,</span><br><span class="line">  `has_gold`      TINYINT         <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;子树(含自己)是否存在黄金会员&#x27;</span>,</span><br><span class="line">  `has_platinum`  TINYINT         <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;子树(含自己)是否存在铂金会员&#x27;</span>,</span><br><span class="line">  `has_diamond`   TINYINT         <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;子树(含自己)是否存在钻石会员&#x27;</span>,</span><br><span class="line">  `version`       <span class="type">INT</span>             <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;乐观锁版本号,防止并发覆盖&#x27;</span>,</span><br><span class="line">  `update_time`   DATETIME        <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="string">&#x27;最后更新时间&#x27;</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`user_id`),</span><br><span class="line">  KEY `idx_parent` (`parent_id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 COMMENT<span class="operator">=</span><span class="string">&#x27;会员团队统计账本表(增量缓存的数据库形态)&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>几个字段的设计意图，值得多说两句：</p>
+<ul>
+<li><strong><code>*_cnt</code> 不含自己</strong>：判定时直接读、直接比较，不用再做减法</li>
+<li><strong><code>has_*</code> 含自己</strong>：父节点算”有效线”时直接 <code>COUNT(*) WHERE parent_id = ? AND has_silver = 1</code>，一笔覆盖整条分支，不用递归</li>
+<li><strong><code>version</code> 乐观锁</strong>：并发结算时防止脏覆盖（后面细说）</li>
+<li><strong><code>user_id</code> 为主键</strong>：所有判定 &#x3D; 主键查询，数据库的 O(1)</li>
+</ul>
+<p>会员表这边，多加一个”作弊”字段：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `<span class="keyword">member</span>` (</span><br><span class="line">  `id`           <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT COMMENT <span class="string">&#x27;会员ID&#x27;</span>,</span><br><span class="line">  `name`         <span class="type">VARCHAR</span>(<span class="number">50</span>)     <span class="keyword">NOT</span> <span class="keyword">NULL</span>                COMMENT <span class="string">&#x27;姓名&#x27;</span>,</span><br><span class="line">  `level`        TINYINT         <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;等级：0白银 1黄金 2铂金 3钻石&#x27;</span>,</span><br><span class="line">  `sales`        <span class="type">DECIMAL</span>(<span class="number">14</span>,<span class="number">2</span>)   <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;个人累计消费额(元)&#x27;</span>,</span><br><span class="line">  `parent_id`    <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>      COMMENT <span class="string">&#x27;直接上级ID，0=平台创始人&#x27;</span>,</span><br><span class="line">  `ancestor_ids` <span class="type">VARCHAR</span>(<span class="number">1024</span>)   <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;&#x27;</span>     COMMENT <span class="string">&#x27;全部祖先ID链,逗号分隔(冗余,插入时继承父亲),用于批量UPDATE整条链&#x27;</span>,</span><br><span class="line">  `create_time`  DATETIME        <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="string">&#x27;注册时间&#x27;</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  KEY `idx_parent` (`parent_id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8mb4 COMMENT<span class="operator">=</span><span class="string">&#x27;会员表&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>ancestor_ids</code> 是空间换时间的经典手笔</strong>：插入新会员时 O(1) 继承父亲的字符串再拼上父亲 ID，之后所有”沿链更新”都变成一条 <code>WHERE user_id IN (...)</code> 的批量 SQL，<strong>再也不用递归查树</strong>。</p>
+<blockquote>
+<p>补充一句：如果你有大量”会员换上级&#x2F;移巢”操作，就该考虑闭包表了；会员体系这种”树只增不减”的场景，冗余祖先链是最简单的正解。</p>
+</blockquote>
+<hr>
+<h2 id="5-一条-SQL-批量更新整条祖先链"><a href="#5-一条-SQL-批量更新整条祖先链" class="headerlink" title="5. 一条 SQL 批量更新整条祖先链"></a>5. 一条 SQL 批量更新整条祖先链</h2><p>核心动作来了。<strong>新会员加入</strong>时，沿祖先链批量更新（一条 SQL 同时处理：团队人数 +1、业绩 + 销售额、has 标志）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Update(&quot;&lt;script&gt;&quot; +</span></span><br><span class="line"><span class="meta">        &quot;UPDATE member_team_stat SET &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  silver_cnt   = silver_cnt   + (CASE WHEN #&#123;level&#125;=0 THEN 1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  gold_cnt     = gold_cnt     + (CASE WHEN #&#123;level&#125;=1 THEN 1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  platinum_cnt = platinum_cnt + (CASE WHEN #&#123;level&#125;=2 THEN 1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  diamond_cnt  = diamond_cnt  + (CASE WHEN #&#123;level&#125;=3 THEN 1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  team_sales   = team_sales   + #&#123;sales&#125;, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_silver   = CASE WHEN #&#123;level&#125;=0 OR silver_cnt &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_gold     = CASE WHEN #&#123;level&#125;=1 OR gold_cnt &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_platinum = CASE WHEN #&#123;level&#125;=2 OR platinum_cnt &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_diamond  = CASE WHEN #&#123;level&#125;=3 OR diamond_cnt &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  version      = version + 1 &quot; +</span></span><br><span class="line"><span class="meta">        &quot;WHERE user_id IN &quot; +</span></span><br><span class="line"><span class="meta">        &quot;&lt;foreach collection=&#x27;ids&#x27; item=&#x27;id&#x27; open=&#x27;(&#x27; separator=&#x27;,&#x27; close=&#x27;)&#x27;&gt;#&#123;id&#125;&lt;/foreach&gt;&quot; +</span></span><br><span class="line"><span class="meta">        &quot;&lt;/script&gt;&quot;)</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">batchAddMember</span><span class="params">(<span class="meta">@Param(&quot;ids&quot;)</span> List&lt;Long&gt; ids,</span></span><br><span class="line"><span class="params">                   <span class="meta">@Param(&quot;level&quot;)</span> <span class="type">int</span> level,</span></span><br><span class="line"><span class="params">                   <span class="meta">@Param(&quot;sales&quot;)</span> java.math.BigDecimal sales)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>会员升级</strong>时同理：整条链上”旧等级 -1、新等级 +1”，一条 SQL 完成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Update(&quot;&lt;script&gt;&quot; +</span></span><br><span class="line"><span class="meta">        &quot;UPDATE member_team_stat SET &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  silver_cnt   = silver_cnt   + (CASE WHEN #&#123;newLevel&#125;=0 THEN 1 WHEN #&#123;oldLevel&#125;=0 THEN -1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  gold_cnt     = gold_cnt     + (CASE WHEN #&#123;newLevel&#125;=1 THEN 1 WHEN #&#123;oldLevel&#125;=1 THEN -1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  platinum_cnt = platinum_cnt + (CASE WHEN #&#123;newLevel&#125;=2 THEN 1 WHEN #&#123;oldLevel&#125;=2 THEN -1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  diamond_cnt  = diamond_cnt  + (CASE WHEN #&#123;newLevel&#125;=3 THEN 1 WHEN #&#123;oldLevel&#125;=3 THEN -1 ELSE 0 END), &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_silver   = CASE WHEN silver_cnt   &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_gold     = CASE WHEN gold_cnt     &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_platinum = CASE WHEN platinum_cnt &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  has_diamond  = CASE WHEN diamond_cnt  &gt; 0 THEN 1 ELSE 0 END, &quot; +</span></span><br><span class="line"><span class="meta">        &quot;  version      = version + 1 &quot; +</span></span><br><span class="line"><span class="meta">        &quot;WHERE user_id IN &quot; +</span></span><br><span class="line"><span class="meta">        &quot;&lt;foreach collection=&#x27;ids&#x27; item=&#x27;id&#x27; open=&#x27;(&#x27; separator=&#x27;,&#x27; close=&#x27;)&#x27;&gt;#&#123;id&#125;&lt;/foreach&gt;&quot; +</span></span><br><span class="line"><span class="meta">        &quot;&lt;/script&gt;&quot;)</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">batchUpgradeCounts</span><span class="params">(<span class="meta">@Param(&quot;ids&quot;)</span> List&lt;Long&gt; ids,</span></span><br><span class="line"><span class="params">                       <span class="meta">@Param(&quot;oldLevel&quot;)</span> <span class="type">int</span> oldLevel,</span></span><br><span class="line"><span class="params">                       <span class="meta">@Param(&quot;newLevel&quot;)</span> <span class="type">int</span> newLevel)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>升级判定</strong>（O(1) 主键查询 + 四条件比较）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> CheckResult <span class="title function_">checkUpgrade</span><span class="params">(Long userId, <span class="type">int</span> nextLevel)</span> &#123;</span><br><span class="line">    <span class="type">Rule</span> <span class="variable">r</span> <span class="operator">=</span> rules.getLevels().get(nextLevel - <span class="number">1</span>);</span><br><span class="line">    <span class="type">TeamStat</span> <span class="variable">t</span> <span class="operator">=</span> teamStatMapper.selectByUserId(userId);        <span class="comment">// 1 条主键 SQL</span></span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">cntOk</span>    <span class="operator">=</span> cntOf(t, r.getNeedLevel()) &gt;= r.getNeedCount();   <span class="comment">// 团队上一级人数</span></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">directOk</span> <span class="operator">=</span> t.getDirectCnt() &gt;= r.getNeedDirect();            <span class="comment">// 直推</span></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">salesOk</span>  <span class="operator">=</span> t.getTeamSales().longValue() &gt;= r.getNeedSales(); <span class="comment">// 业绩</span></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">linesOk</span>  <span class="operator">=</span> countValidLines(t, r.getNeedLevel()) &gt;= r.getNeedLines(); <span class="comment">// 有效线</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CheckResult</span>(cntOk, directOk, salesOk, linesOk);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从”递归扫树”变成”查一行 + 比较”，这就是量变到质变。</p>
+<hr>
+<h2 id="6-连锁升级：为什么必须从下往上"><a href="#6-连锁升级：为什么必须从下往上" class="headerlink" title="6. 连锁升级：为什么必须从下往上"></a>6. 连锁升级：为什么必须从下往上</h2><p>回到开头的致命场景：<strong>最底层会员拉了一个新人，整条父辈链连锁升级</strong>。流程是这样的：</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  sequenceDiagram
+    participant App as 业务代码
+    participant DB as MySQL
+    App-&gt;&gt;DB: ① INSERT 新会员X（挂在最底层N名下）
+    App-&gt;&gt;DB: ② 批量UPDATE账本 IN(N,P1,P2,...root)：人数+1、业绩+X销售额
+    loop 沿祖先链从下往上：N → P1 → P2 → root
+        App-&gt;&gt;DB: ③ checkUpgrade(cur)：1条主键SQL判定四条件
+        alt 达标且未满级
+            App-&gt;&gt;DB: ④ 升级：等级+1 + 批量UPDATE其父链(旧-1新+1)
+            Note over App,DB: 连升：同一人再判最多2次（钻石封顶）
+        end
+    end
+  </pre></div>
+
+<p><strong>关键问题：为什么必须”从下往上”？</strong></p>
+<p>因为<strong>底层升级会二次污染上层账本</strong>：N 从白银变黄金后，P1 的”团队黄金数”立刻 +1，P1 可能因此才达标。如果从上往下，P1 判定时 N 还没升级，用的是旧账本 → <strong>漏判</strong>。只有从下往上，每一级都基于最新账本判定，才保证正确。</p>
+<p>核心代码其实很短（无任何递归树遍历）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 执行链式升级：从新会员的父亲开始，沿祖先链从下往上逐级处理。</span></span><br><span class="line"><span class="comment"> * 每人最多连升 3 次；每次升级 = 1 条判定SQL + 1 条批量UPDATE。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> List&lt;UpgradeStep&gt; <span class="title function_">runChain</span><span class="params">(Long newMemberId, String bizId)</span> &#123;</span><br><span class="line">    List&lt;UpgradeStep&gt; steps = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="type">Member</span> <span class="variable">child</span> <span class="operator">=</span> memberMapper.selectById(newMemberId);</span><br><span class="line">    <span class="type">Member</span> <span class="variable">cur</span> <span class="operator">=</span> child.getParentId() == <span class="number">0</span> ? <span class="literal">null</span> : memberMapper.selectById(child.getParentId());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (cur != <span class="literal">null</span>) &#123;                          <span class="comment">// 从下往上</span></span><br><span class="line">        <span class="keyword">while</span> (cur.getLevel() &lt; <span class="number">3</span>) &#123;               <span class="comment">// 连升循环（钻石封顶）</span></span><br><span class="line">            <span class="type">CheckResult</span> <span class="variable">r</span> <span class="operator">=</span> teamStatService.checkUpgrade(cur.getId(), cur.getLevel() + <span class="number">1</span>);</span><br><span class="line">            <span class="keyword">if</span> (!r.passed()) <span class="keyword">break</span>;</span><br><span class="line">            <span class="type">int</span> <span class="variable">from</span> <span class="operator">=</span> cur.getLevel(), to = from + <span class="number">1</span>;</span><br><span class="line">            teamStatService.upgradeMember(cur, to, bizId + <span class="string">&quot;-&quot;</span> + cur.getId());</span><br><span class="line">            steps.add(<span class="keyword">new</span> <span class="title class_">UpgradeStep</span>(cur.getId(), cur.getName(), from, to));</span><br><span class="line">            cur.setLevel(to);</span><br><span class="line">        &#125;</span><br><span class="line">        cur = cur.getParentId() == <span class="number">0</span> ? <span class="literal">null</span> : memberMapper.selectById(cur.getParentId());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> steps;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>成本核算</strong>：深度 10 层、全员连升 ≈ 40 条以内主键级 SQL，毫秒级完成。对比方案A 的”每层全量重扫团队”，是数量级的差距。</p>
+<blockquote>
+<p>彩蛋：连升逻辑（内层 while）能跑起来的前提是——第 ② 步批量 UPDATE 已经把”团队人数&#x2F;业绩”一步到位了，所以 N 可能同时满足”升黄金”和”升铂金”，一次处理完。</p>
+</blockquote>
+<hr>
+<h2 id="7-大厂双路径：同步保实时，异步扛洪峰"><a href="#7-大厂双路径：同步保实时，异步扛洪峰" class="headerlink" title="7. 大厂双路径：同步保实时，异步扛洪峰"></a>7. 大厂双路径：同步保实时，异步扛洪峰</h2><p>单机性能解决后，还有最后一关：<strong>升级潮</strong>。活动日每秒几万次”拉新 + 连锁结算”，直接同步打库照样会爆。大厂的做法是<strong>双路径</strong>：</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  flowchart TB
+    subgraph 业务层
+        A1[新会员加入] --&gt; B1
+        A2[下单&#x2F;消费] --&gt; B1
+        A3[单人查询&#x2F;单人升级] --&gt; C1
+    end
+    subgraph 事件层
+        B1[(MQ 消息队列)]
+    end
+    subgraph 结算层
+        C1[同步快路径&lt;br&gt;O1读账本 &#x2F; 批量UPDATE]
+        C2[异步批量结算器&lt;br&gt;合并变更]
+        C3[定时对账补偿&lt;br&gt;幂等收敛]
+    end
+    B1 --&gt; C2
+    C1 --&gt; D2
+    C2 --&gt; D2
+    C3 --&gt; D2
+    subgraph 数据层
+        D2[(账本表 + 流水表)]
+    end
+  </pre></div>
+
+<p><strong>同步快路径</strong>：用户查进度、单人升级必须实时，直接读账本表 O(1)。</p>
+<p><strong>异步批量路径</strong>：新会员加入等变更先发 MQ，消费者<strong>按时间窗合并</strong>同类事件后再批量结算：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RabbitListener(queues = &quot;upgrade.settle.queue&quot;, concurrency = &quot;4&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onEvents</span><span class="params">(List&lt;MemberChangeEvent&gt; events)</span> &#123;</span><br><span class="line">    <span class="comment">// ① 按 eventId 幂等去重（upgrade_log 唯一键兜底）</span></span><br><span class="line">    <span class="comment">// ② 按直接上级分组：同一上级的多个新会员合并批量UPDATE</span></span><br><span class="line">    Map&lt;Long, List&lt;MemberChangeEvent&gt;&gt; byParent = groupByParent(events);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> entry : byParent.entrySet()) &#123;</span><br><span class="line">        <span class="comment">// ③ 一条批量UPDATE覆盖组内所有新会员的祖先链</span></span><br><span class="line">        <span class="comment">// ④ 每个新会员执行 runChain 连锁升级</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>收益</strong>：写放大从 O(事件数) 降到 O(组数)，MQ 天然削峰。</p>
+<p><strong>最终一致的三件套</strong>，缺一不可：</p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不丢</td>
+<td>发送方 Confirm + 失败重试&#x2F;落本地表补发</td>
+</tr>
+<tr>
+<td>不重</td>
+<td><code>upgrade_log.biz_id</code> 唯一键 + <code>INSERT IGNORE</code> 幂等</td>
+</tr>
+<tr>
+<td>不漏</td>
+<td>定时对账：扫出变更用户，临时重算子树实际值，差异批量修正</td>
+</tr>
+</tbody></table>
+<p>乐观锁顺带提一句：账本表带 <code>version</code>，<code>UPDATE ... WHERE version = ?</code> 影响行数为 0 就重试（最多 3 次退避），配合”同一用户哈希到同一 MQ 分区串行消费”，冲突概率极低。</p>
+<hr>
+<h2 id="8-实测数据对比"><a href="#8-实测数据对比" class="headerlink" title="8. 实测数据对比"></a>8. 实测数据对比</h2><p>用同一棵随机树，方案A（暴力递归）vs 方案B（增量缓存）对拍，并做双算法互证（全员所有等级逐人比对，结果完全一致）：</p>
+<table>
+<thead>
+<tr>
+<th>数据规模</th>
+<th>方案A 全员判定</th>
+<th>方案B 全员判定</th>
+<th>差距</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200 人</td>
+<td>0.11 ms</td>
+<td>0.047 ms</td>
+<td>~2.3×</td>
+</tr>
+<tr>
+<td>50,000 人</td>
+<td>14.24 ms</td>
+<td>3.2 ms</td>
+<td>~4.5×</td>
+</tr>
+</tbody></table>
+<p>再看最要命的<strong>连锁升级</strong>（底层拉新引发整条链升级）：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>单次连锁结算处理的节点数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>方案A（每个祖先全量重扫团队）</td>
+<td><strong>44,989 次</strong></td>
+</tr>
+<tr>
+<td>方案B（只沿祖先链加减法）</td>
+<td><strong>13 次</strong></td>
+</tr>
+</tbody></table>
+<p>差距 <strong>3,461 倍</strong>——这就是”全量重算”和”增量更新”的本质区别。</p>
+<p>如果换成真实 MySQL 场景，差距还会进一步放大：方案A 每扫一层团队就是一次大范围查询，方案B 从头到尾就是”1 条批量 UPDATE + 深度次主键判定”，网络往返从 O(N) 压到 O(深度)。</p>
+<hr>
+<h2 id="9-总结与心得"><a href="#9-总结与心得" class="headerlink" title="9. 总结与心得"></a>9. 总结与心得</h2><p>回顾整条优化链路：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">方案A 实时递归（O(N²)，卡顿）</span><br><span class="line">   ↓ 核心洞察：变化只影响祖先链</span><br><span class="line">方案B 增量缓存（判定 O(1)，更新 O(深度)）</span><br><span class="line">   ↓ 落库：账本字段化 + 冗余祖先链</span><br><span class="line">一条 SQL 批量更新整条链</span><br><span class="line">   ↓ 应对升级潮</span><br><span class="line">双路径：同步保实时 + 异步批量 + 最终一致</span><br></pre></td></tr></table></figure>
+
+<p>几点心得，也是踩坑总结：</p>
+<ol>
+<li><strong>先想清楚”影响面”，再谈优化</strong>。很多人一上来就加缓存、上分库分表，其实这个场景的根因是”影响面 &#x3D; 祖先链”这个事实没有被利用。</li>
+<li><strong>复杂度下限要心里有数</strong>：判定 O(1)、更新 O(深度) 已经是理论上限，再往后拼的是工程（并发、可靠性、扩展性）。</li>
+<li><strong>所有优化都是权衡</strong>：账本表是用存储换时间，异步路径是用实时性换吞吐——明确说出换来了什么、代价是什么、怎么兜底，比背一个”完美方案”重要得多。</li>
+<li><strong>双算法对拍是好习惯</strong>：新算法上线前用暴力算法做基准对拍，全员逐人比对一致，比写 100 条单测都让人放心。</li>
+</ol>
+<p>如果对你有帮助，欢迎点赞收藏；对某个环节（比如对账的具体实现、分库分表方案）有疑问，评论区聊聊～</p>
+<hr>
+<p><em>本文同步发布在个人博客。配套可视化演示页面（含 14 条自检用例）与完整工程代码，欢迎在评论区留言索取。</em></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://143wange.top">曦辰</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://143wange.top/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/">https://143wange.top/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://143wange.top" target="_blank">曦辰Celestiawn</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/%E4%BC%9A%E5%91%98%E4%BD%93%E7%B3%BB/">会员体系</a><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></div><div class="post_share"><div class="social-share" data-image="/img/post/member-upgrade.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2026/08/02/Spring-Boot%E5%AF%B9%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91OSS%E4%BB%8E%E9%9B%B6%E5%88%B0%E8%83%BD%E8%B7%91/"><img class="next-cover" src="/img/404.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Spring-Boot对接阿里云OSS从零到能跑</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/06/15/JDK1.8%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" title="JDK1.8环境配置"><img class="cover" src="/./img/JDK1.8/top.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-06-15</div><div class="title">JDK1.8环境配置</div></div></a></div><div><a href="/2023/06/21/Java-%E7%99%BE%E9%92%B1%E4%B9%B0%E7%99%BE%E9%B8%A1/" title="百钱买百鸡"><img class="cover" src="/./img/code.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-06-21</div><div class="title">百钱买百鸡</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">曦辰</div><div class="author-info__description">曦辰滴博客，欢迎访问哇！希望在这个你可以学到有用的东西</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">18</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wgdragon"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/dirge143" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:2692174150@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95"><span class="toc-number">1.</span> <span class="toc-text">目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E4%B8%8E%E5%8D%87%E7%BA%A7%E8%A7%84%E5%88%99"><span class="toc-number">2.</span> <span class="toc-text">1. 业务场景与升级规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%96%B9%E6%A1%88A%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AE%9E%E6%97%B6%E9%80%92%E5%BD%92%E4%BC%9A%E5%8D%A1%E6%AD%BB"><span class="toc-number">3.</span> <span class="toc-text">2. 方案A：为什么实时递归会卡死</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%A0%B8%E5%BF%83%E6%B4%9E%E5%AF%9F%EF%BC%9A%E5%A2%9E%E9%87%8F%E7%BC%93%E5%AD%98%EF%BC%88%E6%96%B9%E6%A1%88B%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">3. 核心洞察：增量缓存（方案B）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%90%BD%E5%9C%B0%EF%BC%9A%E8%B4%A6%E6%9C%AC%E5%AD%97%E6%AE%B5%E5%8C%96"><span class="toc-number">5.</span> <span class="toc-text">4. 数据库落地：账本字段化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%B8%80%E6%9D%A1-SQL-%E6%89%B9%E9%87%8F%E6%9B%B4%E6%96%B0%E6%95%B4%E6%9D%A1%E7%A5%96%E5%85%88%E9%93%BE"><span class="toc-number">6.</span> <span class="toc-text">5. 一条 SQL 批量更新整条祖先链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%BF%9E%E9%94%81%E5%8D%87%E7%BA%A7%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%85%E9%A1%BB%E4%BB%8E%E4%B8%8B%E5%BE%80%E4%B8%8A"><span class="toc-number">7.</span> <span class="toc-text">6. 连锁升级：为什么必须从下往上</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%A4%A7%E5%8E%82%E5%8F%8C%E8%B7%AF%E5%BE%84%EF%BC%9A%E5%90%8C%E6%AD%A5%E4%BF%9D%E5%AE%9E%E6%97%B6%EF%BC%8C%E5%BC%82%E6%AD%A5%E6%89%9B%E6%B4%AA%E5%B3%B0"><span class="toc-number">8.</span> <span class="toc-text">7. 大厂双路径：同步保实时，异步扛洪峰</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%AE%9E%E6%B5%8B%E6%95%B0%E6%8D%AE%E5%AF%B9%E6%AF%94"><span class="toc-number">9.</span> <span class="toc-text">8. 实测数据对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E6%80%BB%E7%BB%93%E4%B8%8E%E5%BF%83%E5%BE%97"><span class="toc-number">10.</span> <span class="toc-text">9. 总结与心得</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/" title="会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)"><img src="/img/post/member-upgrade.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)"/></a><div class="content"><a class="title" href="/2026/08/26/%E4%BC%9A%E5%91%98%E6%8B%89%E6%96%B0%E5%BC%95%E5%8F%91%E6%95%B4%E6%9D%A1%E9%93%BE%E5%8D%87%E7%BA%A7/" title="会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)">会员拉新引发整条链升级？我把判定从 O(N²) 优化到 O(1)</a><time datetime="2026-08-26T13:53:13.000Z" title="发表于 2026-08-26 21:53:13">2026-08-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/02/Spring-Boot%E5%AF%B9%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91OSS%E4%BB%8E%E9%9B%B6%E5%88%B0%E8%83%BD%E8%B7%91/" title="Spring-Boot对接阿里云OSS从零到能跑"><img src="/img/404.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spring-Boot对接阿里云OSS从零到能跑"/></a><div class="content"><a class="title" href="/2026/08/02/Spring-Boot%E5%AF%B9%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91OSS%E4%BB%8E%E9%9B%B6%E5%88%B0%E8%83%BD%E8%B7%91/" title="Spring-Boot对接阿里云OSS从零到能跑">Spring-Boot对接阿里云OSS从零到能跑</a><time datetime="2026-08-02T15:48:53.000Z" title="发表于 2026-08-02 23:48:53">2026-08-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/02/Spring-Boot%E5%AF%B9%E6%8E%A5MinIO%E8%87%AA%E5%BB%BA%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8%E4%BB%8E%E9%9B%B6%E5%88%B0%E8%83%BD%E8%B7%91/" title="Spring-Boot对接MinIO自建对象存储从零到能跑"><img src="/img/404.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Spring-Boot对接MinIO自建对象存储从零到能跑"/></a><div class="content"><a class="title" href="/2026/08/02/Spring-Boot%E5%AF%B9%E6%8E%A5MinIO%E8%87%AA%E5%BB%BA%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8%E4%BB%8E%E9%9B%B6%E5%88%B0%E8%83%BD%E8%B7%91/" title="Spring-Boot对接MinIO自建对象存储从零到能跑">Spring-Boot对接MinIO自建对象存储从零到能跑</a><time datetime="2026-08-02T15:48:25.000Z" title="发表于 2026-08-02 23:48:25">2026-08-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/29/uniapp%20SurfaceView%E5%B1%82%E7%BA%A7%E5%8F%A0%E5%8A%A0/" title="uniapp SurfaceView层级叠加"><img src="/img/404.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="uniapp SurfaceView层级叠加"/></a><div class="content"><a class="title" href="/2026/07/29/uniapp%20SurfaceView%E5%B1%82%E7%BA%A7%E5%8F%A0%E5%8A%A0/" title="uniapp SurfaceView层级叠加">uniapp SurfaceView层级叠加</a><time datetime="2026-07-29T12:49:44.000Z" title="发表于 2026-07-29 20:49:44">2026-07-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/01/claude-code-%E6%8E%A5%E5%85%A5deeepseek/" title="claude code 接入deeepseek"><img src="/img/404.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="claude code 接入deeepseek"/></a><div class="content"><a class="title" href="/2026/05/01/claude-code-%E6%8E%A5%E5%85%A5deeepseek/" title="claude code 接入deeepseek">claude code 接入deeepseek</a><time datetime="2026-05-01T05:30:14.000Z" title="发表于 2026-05-01 13:30:14">2026-05-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2026 By 曦辰</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><img src=""><a href="https://beian.miit.gov.cn/#/Integrated/index"  style="color:white" target="_blank"></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://beian.mps.gov.cn/#/query/webSearch?code=45050002000132"  style="color:white" target="_blank"></a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaidWrap = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaidWrap.length) {
+    window.runMermaid = () => {
+      window.loadMermaid = true
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+      Array.from($mermaidWrap).forEach((item, index) => {
+        const mermaidSrc = item.firstElementChild
+        const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+        const mermaidID = 'mermaid-' + index
+        const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+        mermaid.mermaidAPI.render(mermaidID, mermaidDefinition, (svgCode) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svgCode)
+        })
+      })
+    }
+
+    const loadMermaid = () => {
+      window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+    }
+
+    window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+  }
+})()</script></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
